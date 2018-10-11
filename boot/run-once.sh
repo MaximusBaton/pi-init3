@@ -69,11 +69,7 @@ HiddenServicePort 8332 127.0.0.1:8332
 HiddenServiceDir /var/lib/tor/sshd
 HiddenServicePort 22 127.0.0.1:22" | tee --append /etc/tor/torrc
 
+/usr/sbin/service tor restart
+
 # Setup bitcoind
 curl "https://gitlab.com/nolim1t/pi-init3/snippets/1762032/raw" 2>/dev/null | bash
-
-# Automatically trigger when there is a setup file present
-echo "
-if [ -f /setup-bitcoind.sh ]; then
-  screen /setup-bitcoind.sh
-fi" | tee --append /etc/bash.bashrc

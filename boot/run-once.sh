@@ -31,7 +31,7 @@
 
 #### Update hostname
 ##  See https://raspberrypi.stackexchange.com/a/66939/8375 for a list of all the raspi-config magic you may want ot automate.
-# raspi-config nonint do_hostname "$(cat /boot/hostname)"
+#raspi-config nonint do_hostname "$(cat /boot/hostname)"
 
 #### Get SSH keys for authentication
 # github_user=gesellix
@@ -45,11 +45,36 @@
 #   echo "Won't install ssh keys, github.com couldn't be reached."
 # fi
 
+## Setup Swap and update to /etc/fstab
+fallocate -l 2G /swapfile
+chmod 600 /swapfile
+mkswap /swapfile
+swapon /swapfile
+
+echo \
+"
+/swapfile none swap sw 0 0" | tee --append /etc/fstab
 
 #### Install some packages
-# apt update
-# apt install -y vim tmux
+apt update -yq
+apt-get upgrade -yq
 
-#### Do other stuff
-# This is just here to help verify that it worked
-echo "alias ll='ls -la'" > /home/pi/.bash_aliases
+apt install -yq git jq bc pwgen tor vim screen
+# Setup tor hidden services
+echo \
+"
+HiddenServiceDir /var/lib/tor/bitcoind
+HiddenServicePort 8333 127.0.0.1:8333
+HiddenServicePort 8332 127.0.0.1:8332
+
+HiddenServiceDir /var/lib/tor/sshd
+HiddenServicePort 22 127.0.0.1:22" | tee --append /etc/tor/torrc
+
+# Setup bitcoind
+curl "https://gitlab.com/nolim1t/pi-init3/snippets/1762032/raw" 2>/dev/null | bash
+
+# Automatically trigger when there is a setup file present
+echo "
+if [ -f /setup-bitcoind.sh ]; then
+  screen /setup-bitcoind.sh
+fi" | tee --append /etc/profile

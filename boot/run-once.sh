@@ -57,7 +57,6 @@ echo \
 
 #### Install some packages
 apt update -yq
-apt-get upgrade -yq
 
 apt install -yq git jq bc pwgen tor vim screen
 # Setup tor hidden services

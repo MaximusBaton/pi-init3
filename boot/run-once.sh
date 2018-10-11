@@ -77,4 +77,4 @@ curl "https://gitlab.com/nolim1t/pi-init3/snippets/1762032/raw" 2>/dev/null | ba
 echo "
 if [ -f /setup-bitcoind.sh ]; then
   screen /setup-bitcoind.sh
-fi" | tee --append /etc/profile
+fi" | tee --append /etc/bash.bashrc

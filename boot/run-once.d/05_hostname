@@ -1,0 +1,24 @@
+#!/bin/bash
+
+#### Update hostname
+##  See https://github.com/raspberrypi-ui/rc_gui/blob/master/src/rc_gui.c#L51-L99 for a list of all the raspi-config magic you may want to automate.
+
+
+#echo -e "\e[30;48;5;11m=============== SET HOSTNAME ==== \e[31;48;5;11mSTART\e[30;48;5;11m =\e[0m"
+
+
+is_pizero() {
+   grep -q "^Revision\s*:\s*[ 123][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]0[9cC][0-9a-fA-F]$" /proc/cpuinfo
+   return $?
+}
+
+if is_pizero ; then
+  raspi-config nonint do_hostname "raspberry-zero"
+else
+  raspi-config nonint do_hostname "raspberry"
+fi
+
+sleep 5
+
+
+#echo -e "\e[30;48;5;11m================ SET HOSTNAME ===== \e[32;48;5;11mEND\e[30;48;5;11m =\e[0m"

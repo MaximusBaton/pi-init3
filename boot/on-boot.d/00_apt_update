@@ -1,0 +1,20 @@
+#!/bin/bash
+
+#### UPDATE LIBRARIES
+##
+
+
+# Update
+apt update -y
+# Upgrade
+apt upgrade -y
+
+# Update
+apt-get update -y
+# Upgrade
+apt-get upgrade -y
+
+# Autoremove
+apt autoremove -y
+# Upgrade
+apt-get autoremove -y

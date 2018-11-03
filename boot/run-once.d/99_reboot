@@ -1,0 +1,10 @@
+#!/bin/bash
+
+#### Reboot
+##
+
+
+#echo -e "\e[30;48;5;11m=============== REBOOT ========== \e[31;48;5;11mSTART\e[30;48;5;11m =\e[0m"
+
+
+shutdown -r 1

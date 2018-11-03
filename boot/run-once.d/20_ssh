@@ -1,0 +1,56 @@
+#!/bin/bash
+
+#### Set SSH
+##
+
+
+#echo -e "\e[30;48;5;11m================ SET SSH ======== \e[31;48;5;11mSTART\e[30;48;5;11m =\e[0m"
+
+
+## Set authorization by auth_keys
+AUTH_PUBLIC_KEYS_DIR="/boot/ssh_public_keys"
+
+# If dir exists
+if [ -d "$AUTH_PUBLIC_KEYS_DIR" ]; then
+
+    # If dir is not empty
+    if [ -n "$(ls -A $AUTH_PUBLIC_KEYS_DIR)" ]; then
+        ## Create shh files
+        (umask 077; mkdir -p /root/.ssh; touch /root/.ssh/authorized_keys)
+        chown -R $(id -u root):$(id -g root) /root/.ssh
+
+        ## Import public ssh keys from a folder
+        # Find all '.pub' files
+        # And convert then to openssh applicable pub key
+        find $AUTH_PUBLIC_KEYS_DIR -iname "*.pub" -type f \
+            -exec ssh-keygen -i -f {} >> /root/.ssh/authorized_keys \;
+
+        ## Set up sshd_config
+        # PermitRootLogin prohibit-password      =>      PermitRootLogin yes
+        sed -i -e 's/^\(#\?\)PermitRootLogin\(.*\?\)$/PermitRootLogin yes/g' /etc/ssh/sshd_config
+        # PasswordAuthentication yes             =>      PasswordAuthentication no
+        sed -i -e 's/^\(#\?\)PasswordAuthentication\(.*\?\)$/PasswordAuthentication no/g' /etc/ssh/sshd_config
+        # Add ClientAliveInterval
+        echo 'ClientAliveInterval 120' |sudo  tee --append /etc/ssh/sshd_config > /dev/null
+        # Add 'root' user as the only one able to connect via ssh
+        echo 'AllowUsers root' | sudo tee --append /etc/ssh/sshd_config > /dev/null
+    fi
+fi
+
+
+#### SSH Daemon Setup
+##  Replaces the magic of https://github.com/RPi-Distro/raspberrypi-sys-mods/blob/master/debian/raspberrypi-sys-mods.sshswitch.service
+##  See also: https://github.com/RPi-Distro/raspberrypi-sys-mods/blob/master/debian/raspberrypi-sys-mods.regenerate_ssh_host_keys.service
+update-rc.d ssh enable && invoke-rc.d ssh start
+dd if=/dev/hwrng of=/dev/urandom count=1 bs=4096
+rm -f -v /etc/ssh/ssh_host_*_key*
+/usr/bin/ssh-keygen -A -v
+
+
+#### Restart SSH Daemon
+service ssh restart
+
+sleep 5
+
+
+#echo -e "\e[30;48;5;11m================ SET SSH ========== \e[32;48;5;11mEND\e[30;48;5;11m =\e[0m"

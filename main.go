@@ -23,8 +23,9 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
-	"syscall" // for Exec only
+	"syscall"
 	"time"
+    //"os/exec"
 )
 
 var (
@@ -162,6 +163,8 @@ func adjustMounts() {
 }
 
 func replaceCmdline() {
+    //fixpartuuid()
+    
 	checkFatal(
 		"renaming cmdline.txt to cmdline.txt.pi-init3",
 		unix.Rename("/boot/cmdline.txt", "/boot/cmdline.txt.pi-init3"),
@@ -172,6 +175,113 @@ func replaceCmdline() {
 		unix.Rename("/boot/cmdline.txt.orig", "/boot/cmdline.txt"),
 	)
 }
+
+/*func fixpartuuid() {
+    _, err := exec.Command("/bin/sh", "/boot/pi-init3_fix_partuuid.sh").Output()
+    if err != nil {
+        fmt.Println("error fixpartuuid:" + err.Error())
+    }
+    
+    
+    // Try one. Print disk info
+    /*
+        package main
+
+        import (
+          "github.com/shirou/gopsutil/disk"
+          "fmt"
+          "strconv"
+        )
+
+        func main() {
+          parts, err := disk.Partitions(false)
+          check(err)
+
+          //var usage []*disk.UsageStat
+
+          for _, part := range parts {
+            //u, err := disk.Usage(part.Mountpoint)
+            //_, err := disk.Usage(part.Mountpoint)
+            //check(err)
+            //usage = append(usage, u)
+            //printUsage(u)
+            fmt.Println(part.Opts)
+          }
+        }
+
+        func printUsage(u *disk.UsageStat) {
+          fmt.Println(u.Path + "\t" + strconv.FormatFloat(u.UsedPercent, 'f', 2, 64) + "% full.")
+          fmt.Println("Total: "  + strconv.FormatUint(u.Total/1024/1024/1024, 10) + " GiB")
+          fmt.Println("Free:  "  + strconv.FormatUint(u.Free /1024/1024/1024, 10) + " GiB")
+          fmt.Println("Used:  "  + strconv.FormatUint(u.Used /1024/1024/1024, 10) + " GiB")
+        }
+
+        func check(err error) {
+          if err != nil {
+            panic(err)
+          }
+        }
+    * /
+    
+    Try two
+    /*
+        package main
+
+        import (
+                "fmt"
+        "github.com/shirou/gopsutil/disk"
+          //"io/ioutil"
+          //"strings"
+
+            //"github.com/jaypipes/ghw"
+        )
+
+        func fixpartuuid() {
+            // Print disk serial number
+            fmt.Printf("output is %s\n", disk.GetDiskSerialNumber("/dev/mmcblk0p1"))
+
+            // Replace smth in file
+                        /*path := "/root/go/qwe.qwe"
+                        read, err := ioutil.ReadFile(path)
+                        if err != nil {
+                                panic(err)
+                        }
+                        fmt.Println(string(read))
+                        fmt.Println(path)
+
+
+                        //newContents := strings.Replace(string(read), "qqq", "new", -1)
+                        newContents := strings.Replace(string(read), "new", string(disk.GetDiskSerialNumber('/dev/mmcblk0p1')), -1)
+
+                        fmt.Println(newContents)
+
+                        err = ioutil.WriteFile(path, []byte(newContents), 0)
+                        if err != nil {
+                                panic(err)
+                        }* /
+
+            // List info by partition
+                /*block, err := ghw.Block()
+                if err != nil {
+                        fmt.Printf("Error getting block storage info: %v", err)
+                }
+
+                fmt.Printf("%v\n", block)
+
+                for _, disk := range block.Disks {
+                        fmt.Printf(" %v\n", disk)
+                        for _, part := range disk.Partitions {
+                                fmt.Printf("  %v\n", part)
+                        }
+                }* /
+        }
+
+        func main() {
+            fixpartuuid()
+        }
+    * /
+    
+}*/
 
 func reboot() {
 	unix.Sync()
@@ -219,8 +329,11 @@ for script in /boot/run-once*; do
     fi
 done
 
+#Make executable
+chmod +x -R --quiet /boot/run-once.d
+
 # Run every run-once script
-run-parts --exit-on-error /boot/run-once.d 2>/tmp/completed
+run-parts --verbose --exit-on-error /boot/run-once.d 2>/tmp/completed
 sed -i '/^run-parts: executing/!d;s/^run-parts: executing *//' /tmp/completed
 
 # Pop last script off the list if run-parts exited on an error
@@ -233,6 +346,9 @@ fi
 while read script; do
     mv $script /boot/run-once.d/completed/
 done < /tmp/completed
+
+#Make executable
+chmod +x -R --quiet /boot/on-boot.d
 
 # Run every on-boot script
 run-parts /boot/on-boot.d

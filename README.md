@@ -1,5 +1,5 @@
 
-# Raspberry Pi Pre Initialization
+# Raspberry Pi Pre Initialization for Debian Stretch
 
 ## Purpose
 
